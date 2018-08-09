@@ -1,0 +1,107 @@
+version: "2"
+
+services:
+
+  mysqld:
+    image: mysql:$MYSQLDB_TAG
+    container_name: "${PROJECT_NAME}_mysqldb"
+    stop_grace_period: 30s
+    # external_links:
+        # - mysql_mysql_1:docker-mysql
+    ports:
+      - "3306:3306"
+    environment:
+      # DB_HOST: docker-mysql
+      MYSQL_ROOT_PASSWORD: $DB_ROOT_PASSWORD
+      MYSQL_DATABASE: $DB_NAME
+      MYSQL_USER: $DB_USER
+      MYSQL_PASSWORD: $DB_PASSWORD
+    volumes:
+      # - ./mariadb-init:/docker-entrypoint-initdb.d # Place init .sql file(s) here.
+      - /var/www/mysql_docker2:/var/lib/mysql # I want to manage volumes manually.
+
+  php:
+    image: php:$PHP_TAG
+    container_name: "${PROJECT_NAME}_php"
+    environment:
+      PHP_SENDMAIL_PATH: /usr/sbin/sendmail -t -i -S mailhog:1025
+      DB_HOST: $DB_HOST
+      DB_USER: $DB_USER
+      DB_PASSWORD: $DB_PASSWORD
+      DB_NAME: $DB_NAME
+      DB_DRIVER: $DB_DRIVER
+    volumes:
+      - /var/www/rohan_www/src/sample_site/:/usr/share/nginx/html
+      - ./config/php-7.1.19/php.ini-development:/usr/local/etc/php/php.ini
+      # - ./config/php-7.1.19/ext/:/usr/local/lib/php/extensions/no-debug-non-zts-20160303/
+
+  nginx:
+    image: nginx:$NGINX_TAG
+    container_name: "${PROJECT_NAME}_nginx"
+    depends_on:
+      - php
+      - mysqld
+    environment:
+      NGINX_STATIC_CONTENT_OPEN_FILE_CACHE: "off"
+      NGINX_ERROR_LOG_LEVEL: debug
+      NGINX_BACKEND_HOST: php
+      NGINX_SERVER_ROOT: /usr/share/nginx/html/
+      # NGINX_DRUPAL_FILE_PROXY_URL: http://example.com
+    volumes:
+      - /var/www/rohan_www/src/sample_site/:/usr/share/nginx/html/
+      - ./config/nginx/site.conf:/etc/nginx/conf.d/site.conf
+      - ./config/nginx/ssl.conf:/etc/nginx/conf.d/ssl.conf
+      - ./config/ssl/:/etc/ssl/laradock.localhost/
+      
+      # - ./etc/ssl:/etc/ssl
+    links:
+      - php
+    ports:
+      - "8000:80"
+      - "443:443"
+    labels:
+      - 'traefik.backend=nginx'
+      - 'traefik.port=80'
+      - 'traefik.frontend.rule=Host:${PROJECT_BASE_URL}'
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: "${PROJECT_NAME}_mailhog"
+    labels:
+      - 'traefik.backend=mailhog'
+      - 'traefik.port=8025'
+      - 'traefik.frontend.rule=Host:mailhog.${PROJECT_BASE_URL}'
+
+  adminer:
+    container_name: "${PROJECT_NAME}_adminer"
+    image: wodby/adminer:$ADMINER_TAG
+    environment:
+      ADMINER_SALT: adminer-salt
+    volumes:
+      - ./config/db/:/usr/share/nginx/html
+    labels:
+      - 'traefik.backend=adminer'
+      - 'traefik.port=9000'
+      - 'traefik.frontend.rule=Host:adminer.${PROJECT_BASE_URL}'
+
+  portainer:
+    image: portainer/portainer
+    container_name: "${PROJECT_NAME}_portainer"
+    command: --no-auth -H unix:///var/run/docker.sock
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    labels:
+      - 'traefik.backend=portainer'
+      - 'traefik.port=9000'
+      - 'traefik.frontend.rule=Host:portainer.${PROJECT_BASE_URL}'
+
+  traefik:
+    image: traefik
+    container_name: "${PROJECT_NAME}_traefik"
+    command: -c /dev/null --web --docker --logLevel=INFO
+    ports:
+      # - '8000:80'
+      - '8080:8080' # Dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
