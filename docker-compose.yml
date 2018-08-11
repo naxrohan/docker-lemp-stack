@@ -52,8 +52,6 @@ services:
       - ./config/nginx/site.conf:/etc/nginx/conf.d/site.conf
       - ./config/nginx/ssl.conf:/etc/nginx/conf.d/ssl.conf
       - ./config/ssl/:/etc/ssl/laradock.localhost/
-      
-      # - ./etc/ssl:/etc/ssl
     links:
       - php
     ports:
