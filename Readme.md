@@ -47,7 +47,7 @@ Assuming that you have cloned this repository. Now navigate to the repository di
 //ToDo : add folder structure.
 
 
-###Further Reading & References links:
+### Further Reading & References links:
  - [how-to-install-more-php-extensions](https://docs.docker.com/samples/library/php/#how-to-install-more-php-extensions).
  - [tips-for-deploying-nginx-official-image-with-docker](https://blog.docker.com/2015/04/tips-for-deploying-nginx-official-image-with-docker/).
  - [dockerise-your-php-application-with-nginx-and-php7-fpm](http://geekyplatypus.com/dockerise-your-php-application-with-nginx-and-php7-fpm/).
