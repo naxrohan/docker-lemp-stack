@@ -1,13 +1,13 @@
 FROM php:7.1-fpm-alpine
 RUN echo "running package install on php..."
 
-RUN apk upgrade --update && apk add freetype-dev libjpeg-turbo-dev libmcrypt-dev libpng-dev libedit-dev 
+RUN apk upgrade --update && apk add freetype-dev libjpeg-turbo-dev libmcrypt-dev libpng-dev libedit-dev
 RUN apk add mysql-client libxml2
 RUN apk add openssl
 #libicu-dev
 
-# RUN docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ 
-# RUN docker-php-ext-install -j$(nproc) gd
+RUN docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/
+RUN docker-php-ext-install -j$(nproc) gd
 
 # RUN docker-php-ext-install mbstring
 # RUN docker-php-ext-install mysqli
@@ -32,4 +32,4 @@ RUN echo "running nginx setup..."
 RUN mkdir /etc/ssl/laradock.localhost/
 
 RUN openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ./config/ssl/selfsigned.key -out ./config/ssl/selfsigned.crt
-RUN openssl dhparam -out ./config/ssl/dhparam.pem 
+RUN openssl dhparam -out ./config/ssl/dhparam.pem
